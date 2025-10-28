@@ -2,11 +2,11 @@
 
 #pragma once
 
-#pragma once
-
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Components/StaticMeshComponent.h"
+#include "Components/SpotLightComponent.h"
+#include "Engine/Engine.h"
 #include "MyWand.generated.h"
 
 UCLASS()
@@ -26,15 +26,41 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	// 最基础的组件 - 只保留一个
+	// 组件
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UStaticMeshComponent* WandMesh;
 
-	// 最基础的函数 - 先只声明，不添加复杂逻辑
-	UFUNCTION(BlueprintCallable, Category = "Wand")
-	void SimpleToggleLight();
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	USpotLightComponent* StrongLight;
 
-	// 最基础的属性 - 先只用最简单的
+	// 功能函数
+	UFUNCTION(BlueprintCallable, Category = "Wand")
+	void ToggleLight(AActor* TargetActor);
+
+	UFUNCTION(BlueprintCallable, Category = "Wand")
+	void AttackEnemy(AActor* TargetEnemy);
+
+	UFUNCTION(BlueprintCallable, Category = "Wand")
+	void ActivateStrongLight();
+
+	// 属性
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Wand")
 	int32 ChargeCount = 3;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Wand")
+	float StrongLightDuration = 5.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Wand")
+	bool bIsStrongLightActive = false;
+
+	UFUNCTION(BlueprintCallable, Category = "Wand")
+	AActor* GetAimedActor(float MaxDistance = 500.0f);
+
+	UFUNCTION(BlueprintCallable, Category = "Wand")
+	bool HasCharges() const { return ChargeCount > 0; }
+
+private:
+	bool ConsumeCharge();
+	void DeactivateStrongLight();
+	FTimerHandle StrongLightTimer;
 };
