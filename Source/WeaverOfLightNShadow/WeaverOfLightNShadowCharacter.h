@@ -7,6 +7,9 @@
 #include "Logging/LogMacros.h"
 #include "WeaverOfLightNShadowCharacter.generated.h"
 
+// Forward declarations (avoid including MyWand.h in the header)
+class AMyWand;
+class UChildActorComponent;
 class UInputComponent;
 class USkeletalMeshComponent;
 class UCameraComponent;
@@ -15,80 +18,58 @@ struct FInputActionValue;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
-/**
- *  A basic first person character
- */
+/** A basic first person character */
 UCLASS(abstract)
 class AWeaverOfLightNShadowCharacter : public ACharacter
 {
 	GENERATED_BODY()
 
 	/** Pawn mesh: first person view (arms; seen only by self) */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	USkeletalMeshComponent* FirstPersonMesh;
 
 	/** First person camera */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FirstPersonCameraComponent;
 
 protected:
+	// ---- Equipment ----
 
-	/** Jump Input Action */
-	UPROPERTY(EditAnywhere, Category ="Input")
-	UInputAction* JumpAction;
+	/** Helper to get the actual C++ wand actor instance */
+	AMyWand* GetWand() const;
 
-	/** Move Input Action */
-	UPROPERTY(EditAnywhere, Category ="Input")
-	UInputAction* MoveAction;
+	// ---- Input Actions ----
+	UPROPERTY(EditAnywhere, Category = "Input") UInputAction* JumpAction;
+	UPROPERTY(EditAnywhere, Category = "Input") UInputAction* MoveAction;
+	UPROPERTY(EditAnywhere, Category = "Input") UInputAction* LookAction;
+	UPROPERTY(EditAnywhere, Category = "Input") UInputAction* MouseLookAction;
 
-	/** Look Input Action */
-	UPROPERTY(EditAnywhere, Category ="Input")
-	class UInputAction* LookAction;
+	// Wand inputs
+	UPROPERTY(EditAnywhere, Category = "Input") UInputAction* ToggleTorchAction;  // E / F etc.
+	UPROPERTY(EditAnywhere, Category = "Input") UInputAction* AttackAction;       // LMB
+	UPROPERTY(EditAnywhere, Category = "Input") UInputAction* LumosAction;       // RMB / Q
 
-	/** Mouse Look Input Action */
-	UPROPERTY(EditAnywhere, Category ="Input")
-	class UInputAction* MouseLookAction;
-	
-public:
-	AWeaverOfLightNShadowCharacter();
+	virtual void BeginPlay() override;
 
-protected:
-
-	/** Called from Input Actions for movement input */
+	// Raw input handlers
 	void MoveInput(const FInputActionValue& Value);
-
-	/** Called from Input Actions for looking input */
 	void LookInput(const FInputActionValue& Value);
+	void HandleToggleTorch(const FInputActionValue& Value);
+	void HandleAttack(const FInputActionValue& Value);
+	void HandleLumos(const FInputActionValue& Value);
 
-	/** Handles aim inputs from either controls or UI interfaces */
-	UFUNCTION(BlueprintCallable, Category="Input")
-	virtual void DoAim(float Yaw, float Pitch);
-
-	/** Handles move inputs from either controls or UI interfaces */
-	UFUNCTION(BlueprintCallable, Category="Input")
-	virtual void DoMove(float Right, float Forward);
-
-	/** Handles jump start inputs from either controls or UI interfaces */
-	UFUNCTION(BlueprintCallable, Category="Input")
-	virtual void DoJumpStart();
-
-	/** Handles jump end inputs from either controls or UI interfaces */
-	UFUNCTION(BlueprintCallable, Category="Input")
-	virtual void DoJumpEnd();
-
-protected:
+	// Utility (kept BlueprintCallable as in your original)
+	UFUNCTION(BlueprintCallable, Category = "Input") virtual void DoAim(float Yaw, float Pitch);
+	UFUNCTION(BlueprintCallable, Category = "Input") virtual void DoMove(float Right, float Forward);
+	UFUNCTION(BlueprintCallable, Category = "Input") virtual void DoJumpStart();
+	UFUNCTION(BlueprintCallable, Category = "Input") virtual void DoJumpEnd();
 
 	/** Set up input action bindings */
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
-	
 
 public:
+	AWeaverOfLightNShadowCharacter();
 
-	/** Returns the first person mesh **/
 	USkeletalMeshComponent* GetFirstPersonMesh() const { return FirstPersonMesh; }
-
-	/** Returns first person camera component **/
 	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
-
 };
-

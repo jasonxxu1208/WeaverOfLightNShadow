@@ -8,18 +8,11 @@ AMyWand::AMyWand()
 {
     PrimaryActorTick.bCanEverTick = true;
 
-    RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
-
+    // --- Mesh setup ---
     WandMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("WandMesh"));
-    WandMesh->SetupAttachment(RootComponent);
+    RootComponent = WandMesh;
 
-    StrongLight = CreateDefaultSubobject<USpotLightComponent>(TEXT("StrongLight"));
-    StrongLight->SetupAttachment(RootComponent);
-    StrongLight->SetVisibility(false);
-    StrongLight->SetIntensity(5000.0f);
-    StrongLight->SetOuterConeAngle(25.0f);
-    StrongLight->SetAttenuationRadius(800.0f);
-
+    // Assign mesh & material (can be overridden in Blueprint)
     static ConstructorHelpers::FObjectFinder<UStaticMesh> MeshFinder(TEXT("/Engine/BasicShapes/Cylinder"));
     if (MeshFinder.Succeeded())
     {
@@ -27,37 +20,34 @@ AMyWand::AMyWand()
         WandMesh->SetRelativeScale3D(FVector(0.01f, 0.01f, 0.5f));
     }
 
-    
-    static ConstructorHelpers::FObjectFinder<UMaterialInstance> MaterialFinder(TEXT("/Game/FirstPerson/MI_FirstPersonColorway"));
+    static ConstructorHelpers::FObjectFinder<UMaterialInterface> MaterialFinder(TEXT("/Game/FirstPerson/MI_FirstPersonColorway"));
     if (MaterialFinder.Succeeded())
     {
         WandMesh->SetMaterial(0, MaterialFinder.Object);
     }
 
+    // Collision: disable to prevent pushing character
+    WandMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     WandMesh->SetSimulatePhysics(false);
     WandMesh->SetEnableGravity(false);
-    WandMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-    WandMesh->SetCollisionResponseToAllChannels(ECR_Ignore);
 
-    if (UPrimitiveComponent* PrimitiveComp = Cast<UPrimitiveComponent>(RootComponent))
-    {
-        PrimitiveComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-    }
+    // --- Spot light setup ---
+    StrongLight = CreateDefaultSubobject<USpotLightComponent>(TEXT("StrongLight"));
+    StrongLight->SetupAttachment(WandMesh);
 
+    StrongLight->SetRelativeLocation(FVector(0.f, 0.f, 50.f));
+    StrongLight->SetRelativeRotation(FRotator(90.f, 0.f, 0.f));
+
+    StrongLight->SetVisibility(false);
+    StrongLight->SetIntensity(5000.0f);
+    StrongLight->SetOuterConeAngle(25.0f);
+    StrongLight->SetAttenuationRadius(800.0f);
 }
 
 void AMyWand::BeginPlay()
 {
     Super::BeginPlay();
-    UE_LOG(LogTemp, Warning, TEXT("=== Wand testing start ==="));
-    UE_LOG(LogTemp, Warning, TEXT("Wand count: %d"), ChargeCount);
-
-    ToggleLight(nullptr);
-    AttackEnemy(nullptr);
-    ActivateStrongLight();
-
-    UE_LOG(LogTemp, Warning, TEXT("Count left: %d"), ChargeCount);
-    UE_LOG(LogTemp, Warning, TEXT("=== Test over ==="));
+    UE_LOG(LogTemp, Warning, TEXT("Wand spawned (BeginPlay)."));
 }
 
 void AMyWand::Tick(float DeltaTime)

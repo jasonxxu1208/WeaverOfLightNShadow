@@ -1,11 +1,13 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "WeaverOfLightNShadowCharacter.h"
+#include "MyWand.h"
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "EnhancedInputComponent.h"
+#include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "WeaverOfLightNShadow.h"
@@ -59,6 +61,11 @@ void AWeaverOfLightNShadowCharacter::SetupPlayerInputComponent(UInputComponent* 
 		// Looking/Aiming
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AWeaverOfLightNShadowCharacter::LookInput);
 		EnhancedInputComponent->BindAction(MouseLookAction, ETriggerEvent::Triggered, this, &AWeaverOfLightNShadowCharacter::LookInput);
+
+		//Wand function
+		EnhancedInputComponent->BindAction(ToggleTorchAction, ETriggerEvent::Started, this, &AWeaverOfLightNShadowCharacter::HandleToggleTorch);
+		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Started, this, &AWeaverOfLightNShadowCharacter::HandleAttack);
+		EnhancedInputComponent->BindAction(LumosAction, ETriggerEvent::Started, this, &AWeaverOfLightNShadowCharacter::HandleLumos);
 	}
 	else
 	{
@@ -117,4 +124,61 @@ void AWeaverOfLightNShadowCharacter::DoJumpEnd()
 {
 	// pass StopJumping to the character
 	StopJumping();
+}
+
+void AWeaverOfLightNShadowCharacter::HandleToggleTorch(const FInputActionValue& Value)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Toggle Torch triggered"));
+	if (AMyWand* Wand = GetWand())
+	{
+		Wand->ToggleLight(nullptr);
+		
+	}
+}
+
+void AWeaverOfLightNShadowCharacter::HandleAttack(const FInputActionValue& Value)
+{
+
+	UE_LOG(LogTemp, Warning, TEXT("Attack triggered"));
+	if (AMyWand* Wand = GetWand())
+	{
+		Wand->AttackEnemy(nullptr);
+	}
+}
+
+void AWeaverOfLightNShadowCharacter::HandleLumos(const FInputActionValue& Value)
+{
+
+	
+	if (AMyWand* Wand = GetWand())
+	{
+		Wand->ActivateStrongLight();
+		UE_LOG(LogTemp, Warning, TEXT("Lumos triggered"));
+	}
+}
+
+AMyWand* AWeaverOfLightNShadowCharacter::GetWand() const
+{
+	// Search all actors currently attached to this character
+	TArray<AActor*> AttachedActors;
+	GetAttachedActors(AttachedActors);
+
+	for (AActor* Actor : AttachedActors)
+	{
+		if (Actor && Actor->IsA(AMyWand::StaticClass()))
+		{
+			return Cast<AMyWand>(Actor);
+		}
+	}
+
+	// Not found ¡ª warn once for debugging
+	UE_LOG(LogTemp, Warning, TEXT("GetWand(): No attached AMyWand found on %s"), *GetName());
+	return nullptr;
+}
+
+void AWeaverOfLightNShadowCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+
+	UE_LOG(LogTemp, Warning, TEXT("WeaverOfLightNShadowCharacter::BeginPlay called"));
 }
