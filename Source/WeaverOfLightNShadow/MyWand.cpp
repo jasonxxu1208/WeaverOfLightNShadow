@@ -3,6 +3,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "DrawDebugHelpers.h"
 #include "Engine/Engine.h"
+#include "Torch.h"
 
 AMyWand::AMyWand()
 {
@@ -58,6 +59,22 @@ void AMyWand::Tick(float DeltaTime)
 void AMyWand::ToggleLight(AActor* TargetActor)
 {
     UE_LOG(LogTemp, Warning, TEXT("ToggleLight"));
+    constexpr float InteractDistance = 500.f;
+    AActor* AimActor = TargetActor ? TargetActor : GetAimedActor(InteractDistance);
+    if (!AimActor) 
+    {
+        UE_LOG(LogTemp, Warning, TEXT("ToggleLight: No targe in the range"));
+        return;
+    }
+    ATorch* Torch = Cast<ATorch>(AimActor);
+    if (Torch)
+    {
+        Torch->ToggleLight();
+        UE_LOG(LogTemp, Warning, TEXT("ToggleLight: Toggled Torch %s"), *Torch->GetName());
+    }
+    else {
+        UE_LOG(LogTemp, Warning, TEXT("ToggleLight: Target %s is not a Torch"), *AimActor->GetName());
+    }
 }
 
 void AMyWand::AttackEnemy(AActor* TargetEnemy)
