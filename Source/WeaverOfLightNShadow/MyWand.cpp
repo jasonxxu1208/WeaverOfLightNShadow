@@ -40,9 +40,7 @@ AMyWand::AMyWand()
     StrongLight->SetRelativeRotation(FRotator(90.f, 0.f, 0.f));
 
     StrongLight->SetVisibility(false);
-    StrongLight->SetIntensity(5000.0f);
-    StrongLight->SetOuterConeAngle(25.0f);
-    StrongLight->SetAttenuationRadius(800.0f);
+    ApplyStrongLightSettings();
 }
 
 void AMyWand::BeginPlay()
@@ -80,37 +78,14 @@ void AMyWand::ToggleLight(AActor* TargetActor)
 void AMyWand::AttackEnemy(AActor* TargetEnemy)
 {
     UE_LOG(LogTemp, Warning, TEXT("LMB pressed Attact()called, Count left: %d"), ChargeCount);
-    if (ConsumeCharge())
-    {
-        UE_LOG(LogTemp, Warning, TEXT("Attack succeed！"));
-    }
-    // 消耗次数
-    if (!ConsumeCharge())
-    {
-        UE_LOG(LogTemp, Warning, TEXT("Not enough charges to attack!"));
-        return;
-    }
-
-    if (TargetEnemy && TargetEnemy->ActorHasTag("Enemy"))
-    {
-        TargetEnemy->Destroy();
-        UE_LOG(LogTemp, Warning, TEXT("Enemy destroyed! Charge consumed."));
-    }
-    else
-    {
-        UE_LOG(LogTemp, Warning, TEXT("No valid enemy target for attack"));
-        // 注意：即使没有敌人，次数也已经消耗了
-    }
 }
 
 void AMyWand::ActivateStrongLight()
 {
-    UE_LOG(LogTemp, Warning, TEXT("GPressed - ActivateStrongLight called，Count left: %d"), ChargeCount);
-    if (ConsumeCharge())
+    if (bIsStrongLightActive)
     {
-        UE_LOG(LogTemp, Warning, TEXT("Illuminate！"));
+        return;
     }
-    // 消耗次数
     if (!ConsumeCharge())
     {
         UE_LOG(LogTemp, Warning, TEXT("Not enough charges for strong light!"));
@@ -118,6 +93,11 @@ void AMyWand::ActivateStrongLight()
     }
 
     bIsStrongLightActive = true;
+    ApplyStrongLightSettings();
+    if (StrongLight)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Strong Light founded"));
+    }
     StrongLight->SetVisibility(true);
 
     GetWorld()->GetTimerManager().SetTimer(
@@ -128,7 +108,7 @@ void AMyWand::ActivateStrongLight()
         false
     );
 
-    UE_LOG(LogTemp, Warning, TEXT("Strong light activated! Charge consumed."));
+    UE_LOG(LogTemp, Warning, TEXT("Strong light activated! Charges left: %d"), ChargeCount);
 }
 
 AActor* AMyWand::GetAimedActor(float MaxDistance)
@@ -176,4 +156,16 @@ void AMyWand::DeactivateStrongLight()
     bIsStrongLightActive = false;
     StrongLight->SetVisibility(false);
     UE_LOG(LogTemp, Warning, TEXT("Strong light deactivated"));
+}
+
+void AMyWand::ApplyStrongLightSettings()
+{
+    if (!StrongLight) return;
+
+    StrongLight->SetIntensity(StrongLightIntensity);
+    StrongLight->SetAttenuationRadius(StrongLightAttenuationRadius);
+    StrongLight->SetInnerConeAngle(StrongLightInnerCone);
+    StrongLight->SetOuterConeAngle(StrongLightOuterCone);
+    StrongLight->SetLightColor(StrongLightColor);
+    StrongLight->SetCastShadows(bStrongLightCastShadows);
 }
