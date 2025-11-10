@@ -11,7 +11,7 @@ AMyWand::AMyWand()
 
     // --- Mesh setup ---
     WandMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("WandMesh"));
-    RootComponent = WandMesh;
+    SetRootComponent(WandMesh);
 
     // Assign mesh & material (can be overridden in Blueprint)
     static ConstructorHelpers::FObjectFinder<UStaticMesh> MeshFinder(TEXT("/Engine/BasicShapes/Cylinder"));
