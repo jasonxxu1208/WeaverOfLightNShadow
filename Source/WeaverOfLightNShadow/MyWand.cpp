@@ -4,6 +4,7 @@
 #include "DrawDebugHelpers.h"
 #include "Engine/Engine.h"
 #include "Torch.h"
+#include "MyGhost.h"
 
 AMyWand::AMyWand()
 {
@@ -78,6 +79,30 @@ void AMyWand::ToggleLight(AActor* TargetActor)
 void AMyWand::AttackEnemy(AActor* TargetEnemy)
 {
     UE_LOG(LogTemp, Warning, TEXT("LMB pressed Attact()called, Count left: %d"), ChargeCount);
+    AActor* AimActor = TargetEnemy ? TargetEnemy : GetAimedActor(500.f);
+    if (!ConsumeCharge())
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Not enough charges to attack"));
+        return;
+    }
+
+    //AActor* HitActor = TargetEnemy;
+    UE_LOG(LogTemp, Warning, TEXT("Name of Target"), *AimActor->GetName());
+    if (!AimActor)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Attack: no target"));
+        return;
+    }
+
+    if (AimActor->ActorHasTag(FName("Enemy")))
+    {
+        AimActor->Destroy();
+        UE_LOG(LogTemp, Warning, TEXT("Attack: enemy destroyed"));
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Attack: %s is not an enemy"), *AimActor->GetName());
+    }
 }
 
 void AMyWand::ActivateStrongLight()
