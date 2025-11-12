@@ -6,7 +6,7 @@
 // Sets default values
 AMyGhost::AMyGhost()
 {
-	PrimaryActorTick.bCanEverTick = false;
+	PrimaryActorTick.bCanEverTick = true;
 
 	HurtTrigger = CreateDefaultSubobject<USphereComponent>(TEXT("HurtTrigger"));
 	SetRootComponent(HurtTrigger);
@@ -32,7 +32,109 @@ void AMyGhost::BeginPlay()
 	HurtTrigger->OnComponentBeginOverlap.AddDynamic(this, &AMyGhost::OnHurtBeginOverlap);
 
 	StartLoc = GetActorLocation();
-	GetWorldTimerManager().SetTimer(HoverTimer, this, &AMyGhost::HoverTick, 0.016f, true);
+	//GetWorldTimerManager().SetTimer(HoverTimer, this, &AMyGhost::HoverTick, 0.016f, true);
+	UE_LOG(LogTemp, Verbose, TEXT("Ghost spawned at %s. Patrol A=%s B=%s"),
+		*StartLoc.ToCompactString(),
+		*GetPatrolA().ToCompactString(),
+		*GetPatrolB().ToCompactString());
+}
+
+void AMyGhost::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+	UpdateHover(DeltaTime);
+	UpdateState(DeltaTime);
+}
+
+void AMyGhost::UpdateHover(float DeltaTime)
+{
+	if (HoverAmplitude <= 0.f || HoverSpeed <= 0.f) return;
+
+	HoverTime += DeltaTime * HoverSpeed;
+	const float Offset = FMath::Sin(HoverTime) * HoverAmplitude;
+
+	FVector P = GetActorLocation();
+	P.Z = StartLoc.Z + Offset;
+	SetActorLocation(P, false);
+}
+
+FVector AMyGhost::GetPatrolA()const
+{
+	return FVector(StartLoc.X, StartLoc.Y, GetActorLocation().Z);
+}
+
+FVector AMyGhost::GetPatrolB()const
+{
+	const FVector DestXY = StartLoc + WanderOffset;
+	return FVector(DestXY.X, DestXY.Y, GetActorLocation().Z);
+}
+
+void AMyGhost::MoveTowards(const FVector& Destination, float Speed, float DeltaTime)
+{
+	FVector P = GetActorLocation();
+	FVector To = Destination - P;
+
+	To.Z = 0.f;
+	const float Dist = To.Size();
+	if (Dist < KINDA_SMALL_NUMBER) return;
+
+	const FVector Dir = To / Dist;
+	const FVector Step = Dir * Speed * DeltaTime;
+
+	if (Step.SizeSquared() > Dist * Dist)
+	{
+		P = Destination;
+	}
+	else
+	{
+		P += Step;
+	}
+	SetActorLocation(P, false);
+
+	if (!Dir.IsNearlyZero())
+	{
+		const FRotator Face = Dir.Rotation();
+		SetActorRotation(FRotator(0.f, Face.Yaw, 0.f));
+	}
+}
+void AMyGhost::UpdateState(float DeltaTime)
+{
+	APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(this, 0);
+	if (PlayerPawn)
+	{
+		const FVector GhostXY(GetActorLocation().X, GetActorLocation().Y, 0.f);
+		const FVector PlayerXY(PlayerPawn->GetActorLocation().X, PlayerPawn->GetActorLocation().Y, 0.f);
+		const float Dist = FVector::Dist(GhostXY, PlayerXY);
+
+		if (CurrentState == EGhostState::Patrol && Dist <= DetectRadius)
+		{
+			CurrentState = EGhostState::Chase;
+			UE_LOG(LogTemp, Verbose, TEXT("Ghost: Chase(%.1f)"), Dist);
+		}
+		else if (CurrentState == EGhostState::Chase && Dist >= LoseRadius)
+		{
+			CurrentState = EGhostState::Patrol;
+			UE_LOG(LogTemp, Verbose, TEXT("Ghost: Patrol(%.1f)"), Dist);
+		}
+
+		if (CurrentState == EGhostState::Chase)
+		{
+			FVector Destination = PlayerPawn->GetActorLocation();
+			Destination.Z = GetActorLocation().Z;
+			MoveTowards(Destination, ChaseSpeed, DeltaTime);
+			return;
+		}
+	}
+	const FVector A = GetPatrolA();
+	const FVector B = GetPatrolB();
+	const FVector Target = bGoingToB ? B : A;
+	MoveTowards(Target, PatrolSpeed, DeltaTime);
+
+	const float d = FVector::Dist2D(GetActorLocation(), Target);
+	if (d <= PatrolSwitchDistance)
+	{
+		bGoingToB = !bGoingToB;
+	}
 }
 
 void AMyGhost::OnHurtBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32, bool, const FHitResult&)
@@ -53,13 +155,13 @@ void AMyGhost::KillPlayer_Implementation(AActor* Victim)
 	}
 }
 
-void AMyGhost::HoverTick()
-{
-	if (HoverAmplitude <= 0.f || HoverSpeed <= 0.f) return;
-
-	const float T = GetWorld()->GetTimeSeconds() * HoverSpeed;
-	const float Offset = FMath::Sin(T) * HoverAmplitude;
-	FVector P = StartLoc;
-	P.Z += Offset;
-	SetActorLocation(P, false, nullptr, ETeleportType::TeleportPhysics);
-}
+//void AMyGhost::HoverTick()
+//{
+//	if (HoverAmplitude <= 0.f || HoverSpeed <= 0.f) return;
+//
+//	const float T = GetWorld()->GetTimeSeconds() * HoverSpeed;
+//	const float Offset = FMath::Sin(T) * HoverAmplitude;
+//	FVector P = StartLoc;
+//	P.Z += Offset;
+//	SetActorLocation(P, false, nullptr, ETeleportType::TeleportPhysics);
+//}
