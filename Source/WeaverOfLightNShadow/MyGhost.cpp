@@ -42,7 +42,45 @@ void AMyGhost::BeginPlay()
 void AMyGhost::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	UpdateHover(DeltaTime);
+
+	FHitResult GroundHit;
+	bOnGround = IsStandingOnWalkable(&GroundHit);
+
+	if (!bOnGround)
+	{
+		Velocity.Z = FMath::Clamp(Velocity.Z + GravityZ * DeltaTime, -MaxFallSpeed, MaxFallSpeed);
+
+	}
+	else
+	{
+		const FVector L = GetActorLocation();
+		SetActorLocation(FVector(L.X, L.Y, GroundHit.ImpactPoint.Z + 2.f), false, nullptr, ETeleportType::TeleportPhysics);
+		Velocity.Z = 0.f;
+	}
+
+	const FVector Delta(
+		Velocity.X * DeltaTime,
+		Velocity.Y * DeltaTime,
+		bOnGround ? 0.f :Velocity.Z * DeltaTime
+	);
+	FHitResult SweepHit;
+	AddActorWorldOffset(Delta, true, &SweepHit);
+	if (SweepHit.bBlockingHit && FMath::Abs(SweepHit.ImpactNormal.Z) > 0.5f)
+	{
+		Velocity.Z = 0.f;
+	}
+	const float KillZ = GetWorld()->GetWorldSettings()->KillZ;
+	const float Z = GetActorLocation().Z;
+	if (Z < KillZ)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Ghost %s Z=%.1f -> destroy"), *GetName(), GetActorLocation().Z, KillZ);
+		Destroy();
+		return;
+	}
+	if (bOnGround)
+	{
+		UpdateHover(DeltaTime);
+	}
 	UpdateState(DeltaTime);
 }
 
@@ -149,20 +187,25 @@ void AMyGhost::KillPlayer_Implementation(AActor* Victim)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Ghost %s touched %s -> PLAYER DIED"), *GetName(), *Victim->GetName());
 	Victim->Destroy();
-	/*if (bRespawnOnKill)
-	{
-		const FName LevelName(*UGameplayStatics::GetCurrentLevelName(this, true));
-		UGameplayStatics::OpenLevel(this, LevelName);
-	}*/
 }
 
-//void AMyGhost::HoverTick()
-//{
-//	if (HoverAmplitude <= 0.f || HoverSpeed <= 0.f) return;
-//
-//	const float T = GetWorld()->GetTimeSeconds() * HoverSpeed;
-//	const float Offset = FMath::Sin(T) * HoverAmplitude;
-//	FVector P = StartLoc;
-//	P.Z += Offset;
-//	SetActorLocation(P, false, nullptr, ETeleportType::TeleportPhysics);
-//}
+bool AMyGhost::IsStandingOnWalkable(FHitResult* OutHit)const
+{
+	const FVector Start = GetActorLocation();
+	const FVector End = Start + FVector(0, 0, -50.f);
+
+	FCollisionQueryParams Params(SCENE_QUERY_STAT(GhostGround), false, this);
+	FHitResult Hit;
+	if (!GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params))
+		return false;
+
+	if (AActor* A = Hit.GetActor())
+	{
+		if (A->ActorHasTag(TEXT("Walkable")))
+		{
+			if (OutHit) *OutHit = Hit;
+			return true;
+		}
+	}
+	return false;
+}

@@ -76,6 +76,19 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ghost");
 	float PatrolSwitchDistance = 30.f;
 
+	//Gravity and walkable
+	UPROPERTY(EditAnywhere, Category = "Ghost")
+	float GravityZ = -980.f;
+	
+	UPROPERTY(EditAnywhere, Category = "Ghost")
+	float MaxFallSpeed = 1000.f;
+	
+	FVector Velocity;
+	bool bOnGround = false;
+
+	//Gravity Helper
+	bool IsStandingOnWalkable(FHitResult* OutHit = nullptr)const;
+
 	UFUNCTION()
 	void OnHurtBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
