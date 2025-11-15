@@ -47,7 +47,7 @@ public:
 
 	/** Raycast from camera to find aimed actor */
 	UFUNCTION(BlueprintCallable, Category = "Wand")
-	AActor* GetAimedActor(float MaxDistance = 500.0f);
+	AActor* GetAimedActor(float MaxDistance = 1500.0f);
 
 	UFUNCTION(BlueprintCallable, Category = "Wand")
 	bool HasCharges() const { return ChargeCount > 0; }

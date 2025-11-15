@@ -58,7 +58,7 @@ void AMyWand::Tick(float DeltaTime)
 void AMyWand::ToggleLight(AActor* TargetActor)
 {
     UE_LOG(LogTemp, Warning, TEXT("ToggleLight"));
-    constexpr float InteractDistance = 500.f;
+    constexpr float InteractDistance = 1500.f;
     AActor* AimActor = TargetActor ? TargetActor : GetAimedActor(InteractDistance);
     if (!AimActor) 
     {

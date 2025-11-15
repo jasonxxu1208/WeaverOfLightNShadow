@@ -140,19 +140,20 @@ void AMyGhost::UpdateState(float DeltaTime)
 void AMyGhost::OnHurtBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32, bool, const FHitResult&)
 {
 	if (!OtherActor || OtherActor == this) return;
-
+	if (Cast<APawn>(OtherActor) == nullptr) return;
+	if (!OtherActor->ActorHasTag(TEXT("Player"))) return;
 	KillPlayer(OtherActor);
 }
 
 void AMyGhost::KillPlayer_Implementation(AActor* Victim)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Ghost %s touched %s -> PLAYER DIED"), *GetName(), *Victim->GetName());
-
-	if (bRespawnOnKill)
+	Victim->Destroy();
+	/*if (bRespawnOnKill)
 	{
 		const FName LevelName(*UGameplayStatics::GetCurrentLevelName(this, true));
 		UGameplayStatics::OpenLevel(this, LevelName);
-	}
+	}*/
 }
 
 //void AMyGhost::HoverTick()
