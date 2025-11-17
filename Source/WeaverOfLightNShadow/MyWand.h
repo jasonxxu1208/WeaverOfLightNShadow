@@ -21,7 +21,7 @@ protected:
 	virtual void BeginPlay() override;
 
 public:
-	virtual void Tick(float DeltaTime) override;
+	//virtual void Tick(float DeltaTime) override;
 
 	/** Mesh for the wand */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")

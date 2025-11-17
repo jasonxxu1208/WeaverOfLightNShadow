@@ -2,6 +2,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "Components/SphereComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "WeaverOfLightNShadowCharacter.h"
 
 // Sets default values
 AMyGhost::AMyGhost()
@@ -185,8 +186,12 @@ void AMyGhost::OnHurtBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* O
 
 void AMyGhost::KillPlayer_Implementation(AActor* Victim)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Ghost %s touched %s -> PLAYER DIED"), *GetName(), *Victim->GetName());
-	Victim->Destroy();
+	if (AWeaverOfLightNShadowCharacter* Player = Cast<AWeaverOfLightNShadowCharacter>(Victim))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Ghost %s touched %s -> PLAYER DIED"), *GetName(), *Victim->GetName());
+		Player->Die();
+	}
+	
 }
 
 bool AMyGhost::IsStandingOnWalkable(FHitResult* OutHit)const

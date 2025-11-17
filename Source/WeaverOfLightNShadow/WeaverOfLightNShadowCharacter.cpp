@@ -11,9 +11,11 @@
 #include "InputActionValue.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "WeaverOfLightNShadow.h"
+#include <Kismet/GameplayStatics.h>
 
 AWeaverOfLightNShadowCharacter::AWeaverOfLightNShadowCharacter()
 {
+	PrimaryActorTick.bCanEverTick = true;
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(55.f, 96.0f);
 	
@@ -181,4 +183,35 @@ void AWeaverOfLightNShadowCharacter::BeginPlay()
 	Super::BeginPlay();
 
 	UE_LOG(LogTemp, Warning, TEXT("WeaverOfLightNShadowCharacter::BeginPlay called"));
+}
+
+void AWeaverOfLightNShadowCharacter::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+	CheckKillZ();
+}
+
+void AWeaverOfLightNShadowCharacter::CheckKillZ()
+{
+	if (bIsDead) return;
+	const UWorld* W = GetWorld();
+	if (W)
+	{
+		const float WorldKillZ = W->GetWorldSettings()->KillZ;
+		if (GetActorLocation().Z < WorldKillZ)
+		{
+			Die();
+			return;
+		}
+	}
+}
+
+void AWeaverOfLightNShadowCharacter::Die()
+{
+	if (bIsDead) return;
+	bIsDead = true;
+	UE_LOG(LogTemp, Warning, TEXT("Player died"));
+
+	FName LevelName(*UGameplayStatics::GetCurrentLevelName(this, true));
+	UGameplayStatics::OpenLevel(this, LevelName);
 }

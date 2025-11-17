@@ -50,10 +50,10 @@ void AMyWand::BeginPlay()
     UE_LOG(LogTemp, Warning, TEXT("Wand spawned (BeginPlay)."));
 }
 
-void AMyWand::Tick(float DeltaTime)
-{
-    Super::Tick(DeltaTime);
-}
+//void AMyWand::Tick(float DeltaTime)
+//{
+//    Super::Tick(DeltaTime);
+//}
 
 void AMyWand::ToggleLight(AActor* TargetActor)
 {
@@ -79,21 +79,21 @@ void AMyWand::ToggleLight(AActor* TargetActor)
 void AMyWand::AttackEnemy(AActor* TargetEnemy)
 {
     UE_LOG(LogTemp, Warning, TEXT("LMB pressed Attact()called, Count left: %d"), ChargeCount);
-    AActor* AimActor = TargetEnemy ? TargetEnemy : GetAimedActor(500.f);
+    
     if (!ConsumeCharge())
     {
         UE_LOG(LogTemp, Warning, TEXT("Not enough charges to attack"));
         return;
     }
-
+    AActor* AimActor = TargetEnemy ? TargetEnemy : GetAimedActor(500.f);
     //AActor* HitActor = TargetEnemy;
-    UE_LOG(LogTemp, Warning, TEXT("Name of Target"), *AimActor->GetName());
+    
     if (!AimActor)
     {
         UE_LOG(LogTemp, Warning, TEXT("Attack: no target"));
         return;
     }
-
+    UE_LOG(LogTemp, Warning, TEXT("Name of Target"), *AimActor->GetName());
     if (AimActor->ActorHasTag(FName("Enemy")))
     {
         AimActor->Destroy();

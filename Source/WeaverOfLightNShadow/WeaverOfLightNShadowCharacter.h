@@ -49,7 +49,15 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Input") UInputAction* AttackAction;       // LMB
 	UPROPERTY(EditAnywhere, Category = "Input") UInputAction* LumosAction;       // RMB / Q
 
+	UPROPERTY(EditAnywhere, Category = "Death")
+	bool bIsDead = false;
+
+
+	void CheckKillZ();
+
+
 	virtual void BeginPlay() override;
+	virtual void Tick(float DeltaTime) override;
 
 	// Raw input handlers
 	void MoveInput(const FInputActionValue& Value);
@@ -72,4 +80,7 @@ public:
 
 	USkeletalMeshComponent* GetFirstPersonMesh() const { return FirstPersonMesh; }
 	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
+
+	UFUNCTION(BlueprintCallable, Category = "Death")
+	void Die();
 };
