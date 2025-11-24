@@ -72,3 +72,13 @@ Plugins/**/Intermediate/*
 
 # Cache files for the editor to use
 DerivedDataCache/*
+
+# Unreal Engine content files (too large for GitHub)
+Content/**/*.uasset
+Content/**/*.umap
+Content/**/*.png
+Content/**/*.jpg
+Content/**/*.tga
+Content/**/*.exr
+Content/**/*.hdr
+Content/**/*.bmp
