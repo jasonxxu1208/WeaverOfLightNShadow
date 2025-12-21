@@ -82,6 +82,19 @@ public:
 	
 	UPROPERTY(EditAnywhere, Category = "Ghost")
 	float MaxFallSpeed = 1000.f;
+	// Audio
+	// Ghost Movement
+	UPROPERTY(EditAnywhere, Category = "Audio")
+	USoundBase* MoveSound;
+	UPROPERTY(EditAnywhere, Category = "Audio")
+	float MoveInterval_Patrol = 0.4f;
+	UPROPERTY(EditAnywhere, Category = "Audio")
+	float MoveInterval_Chase = 0.2f;
+	float MoveTimer = 0.0f;
+	// Change state from Patrol -> Chase
+	UPROPERTY(EditAnywhere, Category = "Audio")
+	USoundBase* ChaseSound;
+
 	
 	FVector Velocity;
 	bool bOnGround = false;

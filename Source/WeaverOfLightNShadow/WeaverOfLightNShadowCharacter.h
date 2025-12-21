@@ -87,7 +87,7 @@ protected:
 	UFUNCTION(BlueprintCallable, Category = "Input") virtual void DoJumpStart();
 	UFUNCTION(BlueprintCallable, Category = "Input") virtual void DoJumpEnd();
 
-	/** Set up input action bindings */
+	// Set up input action bindings
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
 
 public:

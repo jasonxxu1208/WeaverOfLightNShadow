@@ -33,7 +33,6 @@ void AMyGhost::BeginPlay()
 	HurtTrigger->OnComponentBeginOverlap.AddDynamic(this, &AMyGhost::OnHurtBeginOverlap);
 
 	StartLoc = GetActorLocation();
-	//GetWorldTimerManager().SetTimer(HoverTimer, this, &AMyGhost::HoverTick, 0.016f, true);
 	UE_LOG(LogTemp, Verbose, TEXT("Ghost spawned at %s. Patrol A=%s B=%s"),
 		*StartLoc.ToCompactString(),
 		*GetPatrolA().ToCompactString(),
@@ -135,6 +134,18 @@ void AMyGhost::MoveTowards(const FVector& Destination, float Speed, float DeltaT
 		const FRotator Face = Dir.Rotation();
 		SetActorRotation(FRotator(0.f, Face.Yaw, 0.f));
 	}
+	
+	float interval = MoveInterval_Patrol;
+	if (CurrentState == EGhostState::Chase)
+	{
+		interval = MoveInterval_Chase;
+	}
+	MoveTimer += DeltaTime;
+	if (MoveTimer >= interval)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, MoveSound, GetActorLocation());
+		MoveTimer = 0.f;
+	}
 }
 void AMyGhost::UpdateState(float DeltaTime)
 {
@@ -148,6 +159,7 @@ void AMyGhost::UpdateState(float DeltaTime)
 		if (CurrentState == EGhostState::Patrol && Dist <= DetectRadius)
 		{
 			CurrentState = EGhostState::Chase;
+			UGameplayStatics::PlaySound2D(this, ChaseSound);
 			UE_LOG(LogTemp, Verbose, TEXT("Ghost: Chase(%.1f)"), Dist);
 		}
 		else if (CurrentState == EGhostState::Chase && Dist >= LoseRadius)
@@ -214,3 +226,24 @@ bool AMyGhost::IsStandingOnWalkable(FHitResult* OutHit)const
 	}
 	return false;
 }
+
+//void AMyGhost::HandleMoveSound(float DeltaTime)
+//{
+//	const float Speed2D = FVector(Velocity.X, Velocity.Y, 0.f).Size();
+//	if (Speed2D == 0.f)
+//	{
+//		return;
+//	}
+//
+//	float interval = MoveInterval_Patrol;
+//	if (CurrentState == EGhostState::Chase)
+//	{
+//		interval = MoveInterval_Chase;
+//	}
+//	MoveTimer += DeltaTime;
+//	if (MoveTimer >= interval)
+//	{
+//		UGameplayStatics::PlaySoundAtLocation(this, MoveSound, GetActorLocation());
+//		MoveTimer = 0.f;
+//	}
+//}

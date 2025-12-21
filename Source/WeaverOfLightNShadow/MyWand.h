@@ -23,36 +23,41 @@ protected:
 public:
 	//virtual void Tick(float DeltaTime) override;
 
-	/** Mesh for the wand */
+	// Mesh for the wand 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UStaticMeshComponent* WandMesh;
 
-	/** Spot light used for the ¡°Lumos¡± strong light */
+	// Spot light used for the ¡°Lumos¡± strong light
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	USpotLightComponent* StrongLight;
+	
+	// Audio
+	// Attack and lumos SFX
+	UPROPERTY(EditAnywhere, Category = "Audio")
+	USoundBase* AttackSound;
+	UPROPERTY(EditAnywhere, Category = "Audio")
+	USoundBase* LumosSound;
 
-	// ------------ Gameplay API ------------
-
-	/** Interact with torches in the world (does NOT consume charge) */
+	// Interact with torches in the world (does NOT consume charge)
 	UFUNCTION(BlueprintCallable, Category = "Wand")
 	void ToggleLight(AActor* TargetActor);
 
-	/** Attack an enemy (consumes charge) */
+	// Attack an enemy (consumes charge)
 	UFUNCTION(BlueprintCallable, Category = "Wand")
 	void AttackEnemy(AActor* TargetEnemy);
 
-	/** Turn on strong cone light for a duration (consumes charge) */
+	// Turn on strong cone light for a duration (consumes charge)
 	UFUNCTION(BlueprintCallable, Category = "Wand")
 	void ActivateStrongLight();
 
-	/** Raycast from camera to find aimed actor */
+	// Raycast from camera to find aimed actor
 	UFUNCTION(BlueprintCallable, Category = "Wand")
 	AActor* GetAimedActor(float MaxDistance = 1500.0f);
 
 	UFUNCTION(BlueprintCallable, Category = "Wand")
 	bool HasCharges() const { return ChargeCount > 0; }
 
-	// ------------ Charges / duration ------------
+	// Charges and duration
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Wand")
 	int32 ChargeCount = 3;
@@ -63,7 +68,7 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Wand")
 	bool bIsStrongLightActive = false;
 
-	// ------------ Strong light tuning ------------
+	//Strong light tuning
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Wand", meta = (ClampMin = "0.0"))
 	float StrongLightIntensity = 50000.0f;

@@ -80,11 +80,6 @@ void AMyWand::AttackEnemy(AActor* TargetEnemy)
 {
     UE_LOG(LogTemp, Warning, TEXT("LMB pressed Attact()called, Count left: %d"), ChargeCount);
     
-    if (!ConsumeCharge())
-    {
-        UE_LOG(LogTemp, Warning, TEXT("Not enough charges to attack"));
-        return;
-    }
     AActor* AimActor = TargetEnemy ? TargetEnemy : GetAimedActor(500.f);
     
     if (!AimActor)
@@ -93,15 +88,19 @@ void AMyWand::AttackEnemy(AActor* TargetEnemy)
         return;
     }
     UE_LOG(LogTemp, Warning, TEXT("Name of Target"), *AimActor->GetName());
-    if (AimActor->ActorHasTag(FName("Enemy")))
-    {
-        AimActor->Destroy();
-        UE_LOG(LogTemp, Warning, TEXT("Attack: enemy destroyed"));
-    }
-    else
+    if (!AimActor->ActorHasTag(FName("Enemy")))
     {
         UE_LOG(LogTemp, Warning, TEXT("Attack: %s is not an enemy"), *AimActor->GetName());
+        return;
     }
+    if (!ConsumeCharge())
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Not enough charges to attack"));
+        return;
+    }
+    UGameplayStatics::PlaySoundAtLocation(this, AttackSound, GetActorLocation());
+    AimActor->Destroy();
+    UE_LOG(LogTemp, Warning, TEXT("Attack: enemy destroyed"));
 }
 
 void AMyWand::ActivateStrongLight()
@@ -121,6 +120,7 @@ void AMyWand::ActivateStrongLight()
     if (StrongLight)
     {
         UE_LOG(LogTemp, Warning, TEXT("Strong Light founded"));
+        UGameplayStatics::PlaySoundAtLocation(this, LumosSound, GetActorLocation());
     }
     StrongLight->SetVisibility(true);
 

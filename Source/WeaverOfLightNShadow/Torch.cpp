@@ -1,6 +1,5 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "Torch.h"
 #include <Kismet/GameplayStatics.h>
 // Sets default values
@@ -34,11 +33,6 @@ void ATorch::BeginPlay()
 
 void ATorch::ToggleLight()
 {
-	/*bIsLit = !bIsLit;
-	TorchLight->SetVisibility(bIsLit);
-	UE_LOG(LogTemp, Warning, TEXT("Torch %s: %s"),
-		*GetName(),
-		bIsLit ? TEXT("ON") : TEXT("OFF"));*/
 	SetLit(!bIsLit);
 }
 
