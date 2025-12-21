@@ -33,28 +33,38 @@ class AWeaverOfLightNShadowCharacter : public ACharacter
 	UCameraComponent* FirstPersonCameraComponent;
 
 protected:
-	// ---- Equipment ----
 
 	/** Helper to get the actual C++ wand actor instance */
 	AMyWand* GetWand() const;
 
-	// ---- Input Actions ----
+	// Input Actions
 	UPROPERTY(EditAnywhere, Category = "Input") UInputAction* JumpAction;
 	UPROPERTY(EditAnywhere, Category = "Input") UInputAction* MoveAction;
 	UPROPERTY(EditAnywhere, Category = "Input") UInputAction* LookAction;
 	UPROPERTY(EditAnywhere, Category = "Input") UInputAction* MouseLookAction;
 
 	// Wand inputs
-	UPROPERTY(EditAnywhere, Category = "Input") UInputAction* ToggleTorchAction;  // E / F etc.
+	UPROPERTY(EditAnywhere, Category = "Input") UInputAction* ToggleTorchAction;  // F
 	UPROPERTY(EditAnywhere, Category = "Input") UInputAction* AttackAction;       // LMB
-	UPROPERTY(EditAnywhere, Category = "Input") UInputAction* LumosAction;       // RMB / Q
+	UPROPERTY(EditAnywhere, Category = "Input") UInputAction* LumosAction;       // Q
 
+	// Handle Death
 	UPROPERTY(EditAnywhere, Category = "Death")
 	bool bIsDead = false;
-
-
+	UPROPERTY(EditAnywhere, Category = "Audio")
+	USoundBase* DeathSound;
+	bool bDeathTimerStarted = false;
+	FTimerHandle DeathTimerHandle;
 	void CheckKillZ();
 
+	// Audio
+	// Footsteps
+	UPROPERTY(EditAnywhere, Category = "Audio")
+	USoundBase* FootstepSound;
+	UPROPERTY(EditAnywhere, Category = "Audio")
+	float FootstepInterval = 0.45f;
+	float FootstepTimer = 0.0f;
+	void HandleFootsteps(float DeltaTime);
 
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
@@ -66,7 +76,7 @@ protected:
 	void HandleAttack(const FInputActionValue& Value);
 	void HandleLumos(const FInputActionValue& Value);
 
-	// Utility (kept BlueprintCallable as in your original)
+	// Utility
 	UFUNCTION(BlueprintCallable, Category = "Input") virtual void DoAim(float Yaw, float Pitch);
 	UFUNCTION(BlueprintCallable, Category = "Input") virtual void DoMove(float Right, float Forward);
 	UFUNCTION(BlueprintCallable, Category = "Input") virtual void DoJumpStart();

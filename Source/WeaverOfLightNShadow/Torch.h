@@ -30,7 +30,7 @@ public:
 	UPointLightComponent* TorchLight;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Torch")
-	bool bIsLit = true;
+	bool bIsLit = false;
 
 	UFUNCTION(BlueprintCallable, Category = "Torch")
 	void ToggleLight();

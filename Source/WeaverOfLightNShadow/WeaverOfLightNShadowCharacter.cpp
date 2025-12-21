@@ -189,19 +189,22 @@ void AWeaverOfLightNShadowCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	CheckKillZ();
+	HandleFootsteps(DeltaTime);
 }
 
 void AWeaverOfLightNShadowCharacter::CheckKillZ()
 {
 	if (bIsDead) return;
+	if (bDeathTimerStarted)return;
 	const UWorld* W = GetWorld();
 	if (W)
 	{
 		const float WorldKillZ = W->GetWorldSettings()->KillZ;
-		if (GetActorLocation().Z < WorldKillZ)
+		if (GetActorLocation().Z < -750.f)
 		{
-			Die();
-			return;
+			bDeathTimerStarted = true;
+			UGameplayStatics::PlaySound2D(this, DeathSound);
+			GetWorldTimerManager().SetTimer(DeathTimerHandle, this, &AWeaverOfLightNShadowCharacter::Die, 1.0f, false);
 		}
 	}
 }
@@ -214,4 +217,23 @@ void AWeaverOfLightNShadowCharacter::Die()
 
 	FName LevelName(*UGameplayStatics::GetCurrentLevelName(this, true));
 	UGameplayStatics::OpenLevel(this, LevelName);
+}
+
+void AWeaverOfLightNShadowCharacter::HandleFootsteps(float DeltaTime)
+{
+	if (!GetCharacterMovement()->IsMovingOnGround())
+	{
+		return;
+	}
+	const float Speed = GetVelocity().Size();
+	if (Speed == 0.0f)
+	{
+		return;
+	}
+	FootstepTimer += DeltaTime;
+	if (FootstepTimer >= FootstepInterval)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, FootstepSound, GetActorLocation());
+		FootstepTimer = 0.0f;
+	}
 }
