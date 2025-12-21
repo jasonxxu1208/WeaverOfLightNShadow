@@ -237,3 +237,10 @@ void AWeaverOfLightNShadowCharacter::HandleFootsteps(float DeltaTime)
 		FootstepTimer = 0.0f;
 	}
 }
+
+void AWeaverOfLightNShadowCharacter::Landed(const FHitResult& Hit)
+{
+	Super::Landed(Hit);
+
+	UGameplayStatics::PlaySoundAtLocation(this, JumpSound, GetActorLocation());
+}

@@ -86,7 +86,6 @@ void AMyWand::AttackEnemy(AActor* TargetEnemy)
         return;
     }
     AActor* AimActor = TargetEnemy ? TargetEnemy : GetAimedActor(500.f);
-    //AActor* HitActor = TargetEnemy;
     
     if (!AimActor)
     {

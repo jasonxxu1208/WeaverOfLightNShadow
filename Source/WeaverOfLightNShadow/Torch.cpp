@@ -2,7 +2,7 @@
 
 
 #include "Torch.h"
-
+#include <Kismet/GameplayStatics.h>
 // Sets default values
 ATorch::ATorch()
 {
@@ -34,15 +34,24 @@ void ATorch::BeginPlay()
 
 void ATorch::ToggleLight()
 {
-	bIsLit = !bIsLit;
+	/*bIsLit = !bIsLit;
 	TorchLight->SetVisibility(bIsLit);
 	UE_LOG(LogTemp, Warning, TEXT("Torch %s: %s"),
 		*GetName(),
-		bIsLit ? TEXT("ON") : TEXT("OFF"));
+		bIsLit ? TEXT("ON") : TEXT("OFF"));*/
+	SetLit(!bIsLit);
 }
 
 void ATorch::SetLit(bool bNewLit)
 {
 	bIsLit = bNewLit;
 	TorchLight->SetVisibility(bIsLit);
+	if (bIsLit)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, LightupSound, GetActorLocation());
+	}
+	else
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, LightoffSound, GetActorLocation());
+	}
 }

@@ -32,6 +32,13 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Torch")
 	bool bIsLit = false;
 
+	// Audio
+	// On-off sfx
+	UPROPERTY(EditAnywhere, Category = "Audio")
+	USoundBase* LightupSound;
+	UPROPERTY(EditAnywhere, Category = "Audio")
+	USoundBase* LightoffSound;
+
 	UFUNCTION(BlueprintCallable, Category = "Torch")
 	void ToggleLight();
 

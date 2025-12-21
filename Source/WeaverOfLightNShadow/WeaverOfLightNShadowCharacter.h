@@ -66,6 +66,11 @@ protected:
 	float FootstepTimer = 0.0f;
 	void HandleFootsteps(float DeltaTime);
 
+	//Jump
+	UPROPERTY(EditAnywhere, Category = "Audio")
+	USoundBase* JumpSound;
+	virtual void Landed(const FHitResult& Hit) override;
+
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
 
