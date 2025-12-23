@@ -49,13 +49,10 @@ SourceArt/**/*.tga
 Binaries/*
 Plugins/**/Binaries/*
 
-# Builds
-Build/*
-
-# Whitelist PakBlacklist-<BuildConfiguration>.txt files
-!Build/*/
-Build/*/**
-!Build/*/PakBlacklist*.txt
+# Unreal packaged builds (DO NOT COMMIT)
+Build/Windows*
+Build/Linux*
+Build/Mac*
 
 # Don't ignore icon files in Build
 !Build/**/*.ico
