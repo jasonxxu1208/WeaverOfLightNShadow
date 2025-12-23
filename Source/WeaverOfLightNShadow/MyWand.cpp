@@ -56,11 +56,6 @@ void AMyWand::BeginPlay()
     UE_LOG(LogTemp, Warning, TEXT("Wand spawned (BeginPlay)."));
 }
 
-//void AMyWand::Tick(float DeltaTime)
-//{
-//    Super::Tick(DeltaTime);
-//}
-
 void AMyWand::ToggleLight(AActor* TargetActor)
 {
     UE_LOG(LogTemp, Warning, TEXT("ToggleLight"));
