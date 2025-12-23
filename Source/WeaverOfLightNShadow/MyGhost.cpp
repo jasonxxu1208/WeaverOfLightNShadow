@@ -9,8 +9,10 @@ AMyGhost::AMyGhost()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
+	// Sphere trigger used to detect player contact
 	HurtTrigger = CreateDefaultSubobject<USphereComponent>(TEXT("HurtTrigger"));
 	SetRootComponent(HurtTrigger);
+
 	HurtTrigger->InitSphereRadius(60.f);
 	HurtTrigger->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	HurtTrigger->SetCollisionObjectType(ECC_WorldDynamic);
@@ -18,21 +20,25 @@ AMyGhost::AMyGhost()
 	HurtTrigger->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 	HurtTrigger->SetGenerateOverlapEvents(true);
 
+	// Visual mesh
 	GhostMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("GhostMesh"));
 	GhostMesh->SetupAttachment(HurtTrigger);
 	GhostMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
+	// Used by wand attack logic
 	Tags.Add(TEXT("Enemy"));
 }
 
-// Called when the game starts or when spawned
 void AMyGhost::BeginPlay()
 {
 	Super::BeginPlay();
 
+	// Overlap to kill player
 	HurtTrigger->OnComponentBeginOverlap.AddDynamic(this, &AMyGhost::OnHurtBeginOverlap);
 
+	// Cache starting location for patrol and hover calculation
 	StartLoc = GetActorLocation();
+
 	UE_LOG(LogTemp, Verbose, TEXT("Ghost spawned at %s. Patrol A=%s B=%s"),
 		*StartLoc.ToCompactString(),
 		*GetPatrolA().ToCompactString(),
@@ -43,21 +49,28 @@ void AMyGhost::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	/* 
+	* Horizontal movement handled manually
+	* Vertical movement uses gravity + walkable surface checks
+	* Ground check using downward line trace
+	*/
 	FHitResult GroundHit;
 	bOnGround = IsStandingOnWalkable(&GroundHit);
 
 	if (!bOnGround)
 	{
+		// Apply gravity while falling
 		Velocity.Z = FMath::Clamp(Velocity.Z + GravityZ * DeltaTime, -MaxFallSpeed, MaxFallSpeed);
 
 	}
 	else
 	{
+		// Snap ghost slightly above walkable surface
 		const FVector L = GetActorLocation();
 		SetActorLocation(FVector(L.X, L.Y, GroundHit.ImpactPoint.Z + 2.f), false, nullptr, ETeleportType::TeleportPhysics);
 		Velocity.Z = 0.f;
 	}
-
+	// Apply movement
 	const FVector Delta(
 		Velocity.X * DeltaTime,
 		Velocity.Y * DeltaTime,
@@ -65,10 +78,14 @@ void AMyGhost::Tick(float DeltaTime)
 	);
 	FHitResult SweepHit;
 	AddActorWorldOffset(Delta, true, &SweepHit);
+
+	// Stop vertical movement if hitting a walkable surface
 	if (SweepHit.bBlockingHit && FMath::Abs(SweepHit.ImpactNormal.Z) > 0.5f)
 	{
 		Velocity.Z = 0.f;
 	}
+
+	// Destroy ghost if it falls below world KillZ
 	const float KillZ = GetWorld()->GetWorldSettings()->KillZ;
 	const float Z = GetActorLocation().Z;
 	if (Z < KillZ)
@@ -77,10 +94,12 @@ void AMyGhost::Tick(float DeltaTime)
 		Destroy();
 		return;
 	}
+	// Apply hovering only when grounded
 	if (bOnGround)
 	{
 		UpdateHover(DeltaTime);
 	}
+	// Update AI state and movement behavior
 	UpdateState(DeltaTime);
 }
 
@@ -98,17 +117,20 @@ void AMyGhost::UpdateHover(float DeltaTime)
 
 FVector AMyGhost::GetPatrolA()const
 {
+	// Patrol start point
 	return FVector(StartLoc.X, StartLoc.Y, GetActorLocation().Z);
 }
 
 FVector AMyGhost::GetPatrolB()const
 {
+	// Patrol end point
 	const FVector DestXY = StartLoc + WanderOffset;
 	return FVector(DestXY.X, DestXY.Y, GetActorLocation().Z);
 }
 
 void AMyGhost::MoveTowards(const FVector& Destination, float Speed, float DeltaTime)
 {
+	// Constant speed movement toward destionation
 	FVector P = GetActorLocation();
 	FVector To = Destination - P;
 
@@ -119,6 +141,7 @@ void AMyGhost::MoveTowards(const FVector& Destination, float Speed, float DeltaT
 	const FVector Dir = To / Dist;
 	const FVector Step = Dir * Speed * DeltaTime;
 
+	// Prevent overshooting
 	if (Step.SizeSquared() > Dist * Dist)
 	{
 		P = Destination;
@@ -135,6 +158,7 @@ void AMyGhost::MoveTowards(const FVector& Destination, float Speed, float DeltaT
 		SetActorRotation(FRotator(0.f, Face.Yaw, 0.f));
 	}
 	
+	// Movement sound interval scales with the current AI state
 	float interval = MoveInterval_Patrol;
 	if (CurrentState == EGhostState::Chase)
 	{
@@ -147,6 +171,12 @@ void AMyGhost::MoveTowards(const FVector& Destination, float Speed, float DeltaT
 		MoveTimer = 0.f;
 	}
 }
+
+/*
+* Simple state AI
+* - Patrol: Move back and forth between two points
+* - Chase: Move toward the player when within detect radius
+*/
 void AMyGhost::UpdateState(float DeltaTime)
 {
 	APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(this, 0);
@@ -176,6 +206,7 @@ void AMyGhost::UpdateState(float DeltaTime)
 			return;
 		}
 	}
+	// Patrol behavior, move back and forth between A and B
 	const FVector A = GetPatrolA();
 	const FVector B = GetPatrolB();
 	const FVector Target = bGoingToB ? B : A;
@@ -193,6 +224,7 @@ void AMyGhost::OnHurtBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* O
 	if (!OtherActor || OtherActor == this) return;
 	if (Cast<APawn>(OtherActor) == nullptr) return;
 	if (!OtherActor->ActorHasTag(TEXT("Player"))) return;
+	// Kill palyer on contack
 	KillPlayer(OtherActor);
 }
 
@@ -208,6 +240,7 @@ void AMyGhost::KillPlayer_Implementation(AActor* Victim)
 
 bool AMyGhost::IsStandingOnWalkable(FHitResult* OutHit)const
 {
+	// Line trace downward to detect walkable tagged surfaces
 	const FVector Start = GetActorLocation();
 	const FVector End = Start + FVector(0, 0, -50.f);
 
@@ -226,24 +259,3 @@ bool AMyGhost::IsStandingOnWalkable(FHitResult* OutHit)const
 	}
 	return false;
 }
-
-//void AMyGhost::HandleMoveSound(float DeltaTime)
-//{
-//	const float Speed2D = FVector(Velocity.X, Velocity.Y, 0.f).Size();
-//	if (Speed2D == 0.f)
-//	{
-//		return;
-//	}
-//
-//	float interval = MoveInterval_Patrol;
-//	if (CurrentState == EGhostState::Chase)
-//	{
-//		interval = MoveInterval_Chase;
-//	}
-//	MoveTimer += DeltaTime;
-//	if (MoveTimer >= interval)
-//	{
-//		UGameplayStatics::PlaySoundAtLocation(this, MoveSound, GetActorLocation());
-//		MoveTimer = 0.f;
-//	}
-//}

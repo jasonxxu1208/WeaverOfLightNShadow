@@ -64,7 +64,7 @@ void AWeaverOfLightNShadowCharacter::SetupPlayerInputComponent(UInputComponent* 
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AWeaverOfLightNShadowCharacter::LookInput);
 		EnhancedInputComponent->BindAction(MouseLookAction, ETriggerEvent::Triggered, this, &AWeaverOfLightNShadowCharacter::LookInput);
 
-		//Wand function
+		//Wand interaction mapped via Enhanced Input
 		EnhancedInputComponent->BindAction(ToggleTorchAction, ETriggerEvent::Started, this, &AWeaverOfLightNShadowCharacter::HandleToggleTorch);
 		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Started, this, &AWeaverOfLightNShadowCharacter::HandleAttack);
 		EnhancedInputComponent->BindAction(LumosAction, ETriggerEvent::Started, this, &AWeaverOfLightNShadowCharacter::HandleLumos);
@@ -159,6 +159,7 @@ void AWeaverOfLightNShadowCharacter::HandleLumos(const FInputActionValue& Value)
 	}
 }
 
+// Helper function to locate the wand actor attached to the character
 AMyWand* AWeaverOfLightNShadowCharacter::GetWand() const
 {
 	// Search all actors currently attached to this character
@@ -173,7 +174,6 @@ AMyWand* AWeaverOfLightNShadowCharacter::GetWand() const
 		}
 	}
 
-	// Not found ¡ª warn once for debugging
 	UE_LOG(LogTemp, Warning, TEXT("GetWand(): No attached AMyWand found on %s"), *GetName());
 	return nullptr;
 }
@@ -192,6 +192,10 @@ void AWeaverOfLightNShadowCharacter::Tick(float DeltaTime)
 	HandleFootsteps(DeltaTime);
 }
 
+/*
+* Custom death handling when the player falls out of the levle
+* Uses a short delay to allow death sound to play before reloading.
+*/
 void AWeaverOfLightNShadowCharacter::CheckKillZ()
 {
 	if (bIsDead) return;
@@ -200,10 +204,13 @@ void AWeaverOfLightNShadowCharacter::CheckKillZ()
 	if (W)
 	{
 		const float WorldKillZ = W->GetWorldSettings()->KillZ;
+		// Custom override KillZ
 		if (GetActorLocation().Z < -750.f)
 		{
 			bDeathTimerStarted = true;
+			// Play death sound
 			UGameplayStatics::PlaySound2D(this, DeathSound);
+			// Delay level reload
 			GetWorldTimerManager().SetTimer(DeathTimerHandle, this, &AWeaverOfLightNShadowCharacter::Die, 1.0f, false);
 		}
 	}
@@ -211,10 +218,12 @@ void AWeaverOfLightNShadowCharacter::CheckKillZ()
 
 void AWeaverOfLightNShadowCharacter::Die()
 {
+	// Prevent multiple death triggers
 	if (bIsDead) return;
 	bIsDead = true;
 	UE_LOG(LogTemp, Warning, TEXT("Player died"));
 
+	// Reload current level
 	FName LevelName(*UGameplayStatics::GetCurrentLevelName(this, true));
 	UGameplayStatics::OpenLevel(this, LevelName);
 }
@@ -233,6 +242,7 @@ void AWeaverOfLightNShadowCharacter::HandleFootsteps(float DeltaTime)
 	FootstepTimer += DeltaTime;
 	if (FootstepTimer >= FootstepInterval)
 	{
+		// Play movement sound
 		UGameplayStatics::PlaySoundAtLocation(this, FootstepSound, GetActorLocation());
 		FootstepTimer = 0.0f;
 	}
@@ -241,6 +251,6 @@ void AWeaverOfLightNShadowCharacter::HandleFootsteps(float DeltaTime)
 void AWeaverOfLightNShadowCharacter::Landed(const FHitResult& Hit)
 {
 	Super::Landed(Hit);
-
+	// Play jump sound when character touches ground after a jump
 	UGameplayStatics::PlaySoundAtLocation(this, JumpSound, GetActorLocation());
 }

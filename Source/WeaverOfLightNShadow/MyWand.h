@@ -1,5 +1,4 @@
 
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -9,6 +8,16 @@
 #include "Engine/Engine.h"
 #include "MyWand.generated.h"
 
+/*
+* AMyWand
+* 
+* The wand carried by character and responsible for all three spells logic
+* Interact with torches(Light up/off)
+* Attack enemies
+* Casting Lumos(strong light to activate shadow bridge)
+* 
+* Except for that the wand also controls the related audio
+*/
 UCLASS()
 class WEAVEROFLIGHTNSHADOW_API AMyWand : public AActor
 {
@@ -18,26 +27,28 @@ public:
 	AMyWand();
 
 protected:
+	// Initialize components and default state
 	virtual void BeginPlay() override;
 
 public:
-	//virtual void Tick(float DeltaTime) override;
-
-	// Mesh for the wand 
+	// ----------- Components ------------
+	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UStaticMeshComponent* WandMesh;
 
-	// Spot light used for the ¡°Lumos¡± strong light
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	USpotLightComponent* StrongLight;
 	
-	// Audio
-	// Attack and lumos SFX
+	// ------------- Audio ----------------
+	
 	UPROPERTY(EditAnywhere, Category = "Audio")
 	USoundBase* AttackSound;
+
 	UPROPERTY(EditAnywhere, Category = "Audio")
 	USoundBase* LumosSound;
 
+	// ------------ Gameplay Actions ------------
+	
 	// Interact with torches in the world (does NOT consume charge)
 	UFUNCTION(BlueprintCallable, Category = "Wand")
 	void ToggleLight(AActor* TargetActor);
@@ -46,18 +57,19 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Wand")
 	void AttackEnemy(AActor* TargetEnemy);
 
-	// Turn on strong cone light for a duration (consumes charge)
+	// Activate strong cone light for a few seconds(duration) (consumes charge)
 	UFUNCTION(BlueprintCallable, Category = "Wand")
 	void ActivateStrongLight();
 
-	// Raycast from camera to find aimed actor
+	// Raycast from the camera to detect what is the wand is aiming at.
 	UFUNCTION(BlueprintCallable, Category = "Wand")
 	AActor* GetAimedActor(float MaxDistance = 1500.0f);
 
+	// A helper method to check resource availability
 	UFUNCTION(BlueprintCallable, Category = "Wand")
 	bool HasCharges() const { return ChargeCount > 0; }
 
-	// Charges and duration
+	// --------------Charges and duration -------------------
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Wand")
 	int32 ChargeCount = 3;
@@ -68,7 +80,7 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Wand")
 	bool bIsStrongLightActive = false;
 
-	//Strong light tuning
+	//--------------- Strong light details -----------------
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Wand", meta = (ClampMin = "0.0"))
 	float StrongLightIntensity = 50000.0f;
@@ -89,8 +101,18 @@ public:
 	bool bStrongLightCastShadows = true;
 
 private:
+	// ----------------- Internal helper methods ------------
+	
+	// Check value of charges if less than 0 return false, 
+	// if >0 return true and decrease charge by 1
 	bool ConsumeCharge();
+
+	// Disable Lumos and reset its active state
 	void DeactivateStrongLight();
+
+	// Apply the details of the light to spotlight component
 	void ApplyStrongLightSettings();
+
+	// Timer for Lumos
 	FTimerHandle StrongLightTimer;
 };

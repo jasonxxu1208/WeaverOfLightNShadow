@@ -12,13 +12,14 @@ AMyShadowBridge::AMyShadowBridge()
 {
     PrimaryActorTick.bCanEverTick = false;
 
+    // ---------- Mesh setup ------------
     BridgeMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BridgeMesh"));
     SetRootComponent(BridgeMesh);
 
-    // Start hidden and with no collision until lit
+    // Start hidden and with no collision until sufficient light is detected
     SetActive(false);
 
-    // Default local sample points (can be edited in BP)
+    // Default local sample points, can be overriden in BeginPlay
     SampleLocalPoints = { FVector::ZeroVector, FVector(150.f, 0.f, 0.f), FVector(300.f, 0.f, 0.f) };
 }
 
@@ -26,11 +27,15 @@ void AMyShadowBridge::BeginPlay()
 {
     Super::BeginPlay();
 
-    // If mesh has valid bounds, spread samples along its X extent
+    /*
+    * Distribute lighting sample points along the bridge based
+    * on mesh bounds. This allows any part of the bridge to be
+    * activated by light, instead of a single location.
+    */
     if (BridgeMesh)
     {
         const FBoxSphereBounds B = BridgeMesh->Bounds;
-        const float Len = B.BoxExtent.X * 1.8f; // approx full length
+        const float Len = B.BoxExtent.X * 1.8f;
         if (Len > 1.f)
         {
             SampleLocalPoints.Empty();
@@ -40,6 +45,8 @@ void AMyShadowBridge::BeginPlay()
         }
     }
     UE_LOG(LogTemp, Warning, TEXT("Bridge (BeginPlay)."));
+
+    // Periodically re-evaluate lighting instead of checking every frame, cheaper
     GetWorldTimerManager().SetTimer(CheckTimer, this, &AMyShadowBridge::CheckLighting, CheckInterval, true, 0.05f);
 }
 
@@ -49,7 +56,8 @@ void AMyShadowBridge::SetActive(bool bActive)
 
     if (BridgeMesh)
     {
-        BridgeMesh->SetVisibility(bActive, /*propagate to children*/true);
+        // Toggle both visibility and collision
+        BridgeMesh->SetVisibility(bActive, true);
         BridgeMesh->SetCollisionEnabled(bActive ? ECollisionEnabled::QueryAndPhysics
             : ECollisionEnabled::NoCollision);
     }
@@ -63,14 +71,19 @@ void AMyShadowBridge::CheckLighting()
     const FTransform T = BridgeMesh->GetComponentTransform();
     float MaxSample = 0.f;
 
+    /* 
+    * Evaluate lighting at each sample point on the bridge and
+    * activate bridge if Any porint exceeds the threshold
+    */ 
     for (const FVector& Local : SampleLocalPoints)
     {
         const FVector WorldP = T.TransformPosition(Local);
         MaxSample = FMath::Max(MaxSample, AccumulateIntensityAtPoint(WorldP));
-        if (MaxSample >= Threshold) break; // early out
+        if (MaxSample >= Threshold) break; // Early exit once threshold is reached
     }
 
     const bool bShouldBeActive = (MaxSample >= Threshold);
+    // Only toggle when state actually changes
     if (bShouldBeActive != bIsActive)
     {
         SetActive(bShouldBeActive);
@@ -81,26 +94,22 @@ float AMyShadowBridge::AccumulateIntensityAtPoint(const FVector& P) const
 {
     float Sum = 0.f;
 
-    // All point lights in the editor/world
+    // Accumulate all point lights in the world with a simplified distance based falloff model
     for (TObjectIterator<UPointLightComponent> It; It; ++It)
     {
         const UPointLightComponent* PLC = *It;
         if (!PLC || PLC->GetWorld() != GetWorld()) continue;
         if (!PLC->IsVisible() || !PLC->bAffectsWorld) continue;
-        // optional: ignore baked static lights
-        // if (PLC->Mobility == EComponentMobility::Static) continue;
 
         Sum += PointLightIntensityAt(PLC, P);
     }
 
-    // All spot lights
+    // Accumulate all spot lights in the world with both distance and cone angle falloff
     for (TObjectIterator<USpotLightComponent> It; It; ++It)
     {
         const USpotLightComponent* SLC = *It;
         if (!SLC || SLC->GetWorld() != GetWorld()) continue;
         if (!SLC->IsVisible() || !SLC->bAffectsWorld) continue;
-        // optional: ignore baked static lights
-        // if (SLC->Mobility == EComponentMobility::Static) continue;
 
         Sum += SpotLightIntensityAt(SLC, P);
     }
@@ -117,8 +126,12 @@ float AMyShadowBridge::PointLightIntensityAt(const UPointLightComponent* L, cons
     const float   d = FVector::Distance(Lpos, P);
     if (d >= R || R <= 1.f) return 0.f;
 
-    // Smooth quadratic falloff
-    const float t = 1.f - (d / R);     // 1 at source, 0 at radius
+    /*
+    * Quadratic distance falloff
+    * - Full intensity at source (1)
+    * - Fades to zero at attenuation radius
+    */
+    const float t = 1.f - (d / R);
     const float falloff = t * t;
 
     return L->Intensity * falloff;
@@ -133,11 +146,14 @@ float AMyShadowBridge::SpotLightIntensityAt(const USpotLightComponent* L, const 
     const float   d = FVector::Distance(Lpos, P);
     if (d >= R || R <= 1.f) return 0.f;
 
-    // Distance falloff
+    // Distance falloff(same as point light)
     const float t = 1.f - (d / R);
     const float distFalloff = t * t;
 
-    // Angular falloff. Spotlights point along +X in component space.
+    /*
+    * Angular falloff
+    * Spotlights emit light within a cone defined by inner and outer cone angles
+    */
     const FVector Dir = L->GetComponentTransform().GetUnitAxis(EAxis::X);
     const float cosTheta = FVector::DotProduct(Dir, (P - Lpos).GetSafeNormal());
     const float thetaDeg = FMath::RadiansToDegrees(FMath::Acos(FMath::Clamp(cosTheta, -1.f, 1.f)));

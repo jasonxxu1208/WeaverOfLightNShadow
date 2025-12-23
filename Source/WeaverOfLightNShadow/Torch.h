@@ -1,4 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -8,6 +7,13 @@
 #include "Components/PointLightComponent.h"
 #include "Torch.generated.h"
 
+/*
+* ATorch
+* 
+* A world ineraction actor representing a lightable torch
+* Torches can be toggled on or off by the character's wand
+* and serves as an environmental light sources
+*/
 UCLASS()
 class WEAVEROFLIGHTNSHADOW_API ATorch : public AActor
 {
@@ -18,30 +24,36 @@ public:
 	ATorch();
 
 protected:
-	// Called when the game starts or when spawned
+	// Initialize components and default state
 	virtual void BeginPlay() override;
 
 public:	
-	// Called every frame
+	// ------------- Components -------------
+	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Torch")
 	UStaticMeshComponent* TorchMesh;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Torch")
 	UPointLightComponent* TorchLight;
 
+	// Wheather the torch is currenly lit
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Torch")
 	bool bIsLit = false;
 
-	// Audio
-	// On-off sfx
+	// ----------- Audio --------------
+
 	UPROPERTY(EditAnywhere, Category = "Audio")
 	USoundBase* LightupSound;
 	UPROPERTY(EditAnywhere, Category = "Audio")
 	USoundBase* LightoffSound;
 
+	// ------------- Gameplay Action --------------
+
+	// Toggle the torch's state
 	UFUNCTION(BlueprintCallable, Category = "Torch")
 	void ToggleLight();
 
+	// Set torch's state
 	UFUNCTION(BlueprintCallable, Category = "Torch")
 	void SetLit(bool bNewLit);
 };

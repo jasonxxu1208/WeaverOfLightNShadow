@@ -1,21 +1,25 @@
-// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Torch.h"
 #include <Kismet/GameplayStatics.h>
-// Sets default values
+
 ATorch::ATorch()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
 
+	// ---------- Mesh setup -------------
 	TorchMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("TorchMesh"));
 	SetRootComponent(TorchMesh);
 	TorchMesh->SetMobility(EComponentMobility::Static);
 
+	// ----------- Light setup -----------
 	TorchLight = CreateDefaultSubobject<UPointLightComponent>(TEXT("TorchLight"));
 	TorchLight->SetupAttachment(TorchMesh);
 	TorchLight->SetMobility(EComponentMobility::Stationary);
+
+	// Position the light above the torch mesh
 	TorchLight->SetRelativeLocation(FVector(0, 0, 50));
+
+	// Lighting setup to make the light more like a flame
 	TorchLight->IntensityUnits = ELightUnits::Lumens;
 	TorchLight->SetIntensity(900.f);
 	TorchLight->bUseTemperature = true;
@@ -24,10 +28,10 @@ ATorch::ATorch()
 
 }
 
-// Called when the game starts or when spawned
 void ATorch::BeginPlay()
 {
 	Super::BeginPlay();
+	// Initialize light visibility based on the starting state
 	TorchLight->SetVisibility(bIsLit);
 }
 
@@ -40,6 +44,7 @@ void ATorch::SetLit(bool bNewLit)
 {
 	bIsLit = bNewLit;
 	TorchLight->SetVisibility(bIsLit);
+	// Play different sound based on the new state
 	if (bIsLit)
 	{
 		UGameplayStatics::PlaySoundAtLocation(this, LightupSound, GetActorLocation());
