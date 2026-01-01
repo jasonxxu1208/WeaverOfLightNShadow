@@ -33,15 +33,28 @@ The project focuses on systems-driven gameplay, emphasizing real-time light eval
 
 ## Project Structure
 Source/WeaverOfLightNShadow/MyContent/
+
   WeaverOfLightNShadowCharacter(Player & Input handle, modified based on UE5 generated character class)
+  
   MyWand (Spells & Charges)
+  
   Torch (World Interaction)
+  
   MyGhost (Enemy AI)
+  
   MyShadowBridge (Light-Driven Platform)
+  
 Content/
+
   Audio(SFX)
+  
   Blueprints(BP classes for AActor)
+  
   FirstPerson(Character BP)
+  
   Level(Level design)
+  
   Materials(Master Material & MI)
+  
   UI(Gamplay UI)
+  
