@@ -30,12 +30,12 @@ The project focuses on systems-driven gameplay, emphasizing real-time light eval
   - Encourages decision-making on different paths
 
  ## Technical Highlights
-- Engineered a light-gated ShadowBridge system in C++, computing gameplay-driven light intensity using distance and angular falloff to dynamically toggle bridge visibility and collision, making light a core traversal mechanic
-- Implemented a modular Ghost AI state machine in C++ with patrol and chase behaviors driven by player distance, including deterministic instant-kill logic via player-only overlap filtering
-- Designed a wand interaction system using UE5 Enhanced Input, decoupling input actions from gameplay logic through default mapping contexts to ensure consistent behavior across levels
-- Developed a reusable rendering pipeline using a parameterized Master Material exposing emissive, opacity, and roughness controls, enabling rapid visual iteration with minimal shader permutations
-- Built robust player and enemy state management incorporating gravity simulation, surface tagging, and KillZ handling, ensuring reliable death, respawn, and level transition behavior
-- Constructed a modular environment architecture using Blueprint-based prefabs to standardize grid alignment and promote asset reuse across levels
+- **Engineered a light-gated ShadowBridge system in C++**, computing gameplay-driven light intensity using distance and angular falloff to dynamically toggle bridge visibility and collision, making light a core traversal mechanic
+- **Implemented a modular Ghost AI state machine in C++** with patrol and chase behaviors driven by player distance, including deterministic instant-kill logic via player-only overlap filtering
+- **Designed a wand interaction system using UE5 Enhanced Input**, decoupling input actions from gameplay logic through default mapping contexts to ensure consistent behavior across levels
+- **Developed a reusable rendering pipeline** using a parameterized Master Material exposing emissive, opacity, and roughness controls, enabling rapid visual iteration with minimal shader permutations
+- **Built robust player and enemy state management** incorporating gravity simulation, surface tagging, and KillZ handling, ensuring reliable death, respawn, and level transition behavior
+- C**onstructed a modular environment architecture** using Blueprint-based prefabs to standardize grid alignment and promote asset reuse across levels
 
 ## Project Structure
 Source/WeaverOfLightNShadow/MyContent/
