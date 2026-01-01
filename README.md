@@ -5,4 +5,7 @@ Weaver of Light & Shadow is a first-person puzzle-action game developed in Unrea
 
 The project focuses on systems-driven gameplay, emphasizing real-time light evaluation, modular spell logic, and state-based AI behavior.
 
---------------------------------
+## Core Gameplay Mechannics
+- **Wand-Based Spell System**
+- - Toggle torches on/off without consuming resoources
+  - 
