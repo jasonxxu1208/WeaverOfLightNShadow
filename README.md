@@ -1,7 +1,10 @@
 # Weaver of Light and Shadow
 **Unreal Engine 5 | C++ & Blueprint Gameplay Systems | First person puzzle action**
+
 **Author: Xuedong(Jason) Xu**
+
 B.S. Computer Science & Software Engineering
+
 University of Washington Bothell
 **Demo:** https://youtu.be/5cR2NjdWtfA 
 ## Project Overview
