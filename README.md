@@ -7,5 +7,5 @@ The project focuses on systems-driven gameplay, emphasizing real-time light eval
 
 ## Core Gameplay Mechannics
 - **Wand-Based Spell System**
-- - Toggle torches on/off without consuming resoources
+  - Toggle torches on/off without consuming resoources
   - 
