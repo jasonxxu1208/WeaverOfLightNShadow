@@ -9,7 +9,7 @@ University of Washington Bothell
 
 **Demo:** https://youtu.be/5cR2NjdWtfA 
 
-You can read the full [Technical Report](Technical Report.pdf) here.
+This is just a brief introduction of the project. You can read the full [Technical Report](Technical_Report.pdf) here.
 ## Project Overview
 Weaver of Light & Shadow is a first-person puzzle-action game developed in Unreal Engine 5 using C++ and Blueprints, where light functions as both a traversal mechanic and a combat resource. Players wield a magical wand to interact with torches, cast powerful light spells, and defeat enemies while navigating environments shaped by illumination.
 
